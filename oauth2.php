@@ -1,19 +1,61 @@
 <?php
+/**
+ * Copyright (c) 2010 VZnet Netzwerke Ltd.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @author    Bastian Hofmann <bhfomann@vz.net>
+ * @copyright 2010 VZnet Netzwerke Ltd.
+ * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
+ */
 
 class OAuth2_Service_Configuration
 {
+    /**
+     * @var string
+     */
     private $_authorizeEndpoint;
+
+    /**
+     * @var string
+     */
     private $_accessTokenEndpoint;
 
+    /**
+     * @param string $authorizeEndpoint
+     * @param string $accessTokenEndpoint
+     */
     public function __construct($authorizeEndpoint, $accessTokenEndpoint) {
         $this->_authorizeEndpoint = $authorizeEndpoint;
         $this->_accessTokenEndpoint = $accessTokenEndpoint;
     }
 
+    /**
+     * @return string
+     */
     public function getAuthorizeEndpoint() {
         return $this->_authorizeEndpoint;
     }
 
+    /**
+     * @return string
+     */
     public function getAccessTokenEndpoint() {
         return $this->_accessTokenEndpoint;
     }
@@ -22,11 +64,32 @@ class OAuth2_Service_Configuration
 
 class OAuth2_Service
 {
+    /**
+     * @var OAuth2_Client
+     */
     private $_client;
+
+    /**
+     * @var OAuth2_Service_Configuration
+     */
     private $_configuration;
+
+    /**
+     * @var OAuth2_DataStore_Abstract
+     */
     private $_dataStore;
+
+    /**
+     * @var string
+     */
     private $_scope;
-    
+
+    /**
+     * @param OAuth2_Client $client
+     * @param OAuth2_Service_Configuration $configuration
+     * @param OAuth2_DataStore_Abstract $dataStore
+     * @param string $scope optional
+     */
     public function  __construct(OAuth2_Client $client,
             OAuth2_Service_Configuration $configuration,
             OAuth2_DataStore_Abstract $dataStore,
@@ -36,7 +99,10 @@ class OAuth2_Service
         $this->_dataStore = $dataStore;
         $this->_scope = $scope;
     }
-    
+
+    /**
+     * redirect to authorize endpoint of service
+     */
     public function authorize() {
         $parameters = array(
             'type' => 'web_server',
@@ -49,8 +115,14 @@ class OAuth2_Service
         $url = $this->_configuration->getAuthorizeEndpoint() . '?' . http_build_query($parameters);
 
         header('Location: ' . $url);
+        die();
     }
 
+    /**
+     * get access token of from service, has to be called after successfull authorization
+     *
+     * @param string $code optional, if no code given method tries to get it out of $_GET
+     */
     public function getAccessToken($code = null) {
         if (! $code) {
             if (! isset($_GET['code'])) {
@@ -74,6 +146,11 @@ class OAuth2_Service
         $this->_parseAccessTokenResponse($http);
     }
 
+    /**
+     * refresh access token
+     *
+     * @param OAuth2_Token $token
+     */
     public function refreshAccessToken(OAuth2_Token $token) {
         if (! $token->getRefreshToken()) {
             throw new OAuth2_Exception('could not refresh access token, no refresh token available');
@@ -93,6 +170,11 @@ class OAuth2_Service
         $this->_parseAccessTokenResponse($http);
     }
 
+    /**
+     * parse the response of an access token request and store it in dataStore
+     *
+     * @param OAuth2_HttpClient $http
+     */
     private function _parseAccessTokenResponse(OAuth2_HttpClient $http) {
         $headers = $http->getHeaders();
         $type = 'text';
@@ -124,6 +206,15 @@ class OAuth2_Service
         $this->_dataStore->storeAccessToken($token);
     }
 
+    /**
+     * call an api endpoint. automatically adds needed authorization headers with access token or parameters
+     *
+     * @param string $endpoint
+     * @param string $method default 'GET'
+     * @param array $uriParameters optional
+     * @param mixed $postBody optional, can be string or array
+     * @return string
+     */
     public function callApiEndpoint($endpoint, $method = 'GET', array $uriParameters = array(), $postBody = null) {
         $token = $this->_dataStore->retrieveAccessToken();
 
@@ -150,38 +241,64 @@ class OAuth2_Service
 
         $parameters = null;
 
-        
         $header = array();
         $header = array('Authorization: OAuth ' . $token->getAccessToken());
 
         $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $header);
         $http->execute();
-
+        
+        return $http->getResponse();
     }
 }
 
 class OAuth2_Token
 {
+    /**
+     * @var string
+     */
     private $_accessToken;
+
+    /**
+     * @var string
+     */
     private $_refreshToken;
+
+    /**
+     * @var string
+     */
     private $_lifeTime;
 
+    /**
+     *
+     * @param string $accessToken
+     * @param string $refreshToken
+     * @param int $lifeTime
+     */
     public function __construct($accessToken = null, $refreshToken = null, $lifeTime = null) {
         $this->_accessToken = $accessToken;
         $this->_refreshToken = $refreshToken;
         if ($lifeTime) {
-            $this->_lifeTime = $lifeTime + time();
+            $this->_lifeTime = ((int)$lifeTime) + time();
         }
     }
 
+    /**
+     * @return string
+     */
     public function getAccessToken() {
         return $this->_accessToken;
     }
 
+    /**
+     * @return string
+     */
     public function getRefreshToken() {
         return $this->_refreshToken;
     }
 
+    /**
+     * @return int
+     */
     public function getLifeTime() {
         return $this->_lifeTime;
     }
@@ -202,6 +319,9 @@ class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
         return isset($_SESSION['oauth2_token']) ? $_SESSION['oauth2_token'] : new OAuth2_Token();
     }
 
+    /**
+     * @param OAuth2_Token $token
+     */
     public function storeAccessToken(OAuth2_Token $token) {
         $_SESSION['oauth2_token'] = $token;
     }
@@ -213,30 +333,63 @@ class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
 
 abstract class OAuth2_DataStore_Abstract
 {
+    /**
+     * @param OAuth2_Token $token
+     */
     abstract function storeAccessToken(OAuth2_Token $token);
+
+    /**
+     * @return OAuth2_Token
+     */
     abstract function retrieveAccessToken();
 }
 
 class OAuth2_Client
 {
+    /**
+     * @var string
+     */
     private $_clientKey;
+
+    /**
+     * @var string
+     */
     private $_clientSecret;
+
+    /**
+     * @var string
+     */
     private $_callbackUrl;
 
+    /**
+     *
+     * @param string $clientKey
+     * @param string $clientSecret
+     * @param string $callbackUrl
+     */
     public function __construct($clientKey, $clientSecret, $callbackUrl) {
         $this->_clientKey = $clientKey;
         $this->_clientSecret = $clientSecret;
         $this->_callbackUrl = $callbackUrl;
     }
 
+    /**
+     * @return string
+     */
     public function getClientKey() {
         return $this->_clientKey;
     }
 
+    /**
+     * @return string
+     */
     public function getClientSecret() {
         return $this->_clientSecret;
     }
 
+    /**
+     * @return string
+     */
     public function getCallbackUrl() {
         return $this->_callbackUrl;
     }
@@ -244,15 +397,52 @@ class OAuth2_Client
 
 class OAuth2_HttpClient
 {
+    /**
+     * @var string
+     */
     private $_url;
+
+    /**
+     * @var string
+     */
     private $_method;
+
+    /**
+     * @var string
+     */
     private $_parameters;
+
+    /**
+     * @var array
+     */
     private $_requestHeader;
 
+    /**
+     * @var string
+     */
     private $_response;
+
+    /**
+     * @var array
+     */
     private $_headers;
+
+    /**
+     * @var array
+     */
     private $_info;
 
+    /**
+     * @var boolean
+     */
+    private $_debug = false;
+
+    /**
+     * @param string $url
+     * @param string $method
+     * @param string $parameters
+     * @param array $header  any additional header which should be set
+     */
     public function __construct($url, $method, $parameters = null, array $header = array()) {
         $this->_url = $url;
         $this->_method = $method;
@@ -260,6 +450,25 @@ class OAuth2_HttpClient
         $this->_requestHeader = $header;
     }
 
+    /**
+     * parses a string with two delimiters to an array
+     *
+     * example:
+     *
+     * param1=value1&param2=value2
+     *
+     * will result with delimiters & and = to
+     *
+     * array(
+     *   'param1' => 'value1',
+     *   'param2' => 'value2',
+     * )
+     *
+     * @param string $string
+     * @param string $firstDelimiter
+     * @param string $secondDelimiter
+     * @return array
+     */
     public static function parseStringToArray($string, $firstDelimiter, $secondDelimiter) {
         $resultArray = array();
         $parts = explode($firstDelimiter, $string);
@@ -270,6 +479,9 @@ class OAuth2_HttpClient
         return $resultArray;
     }
 
+    /**
+     * executes the curl request
+     */
     public function execute() {
         $ch = curl_init();
 
@@ -299,28 +511,40 @@ class OAuth2_HttpClient
 
         $this->_headers = OAuth2_HttpClient::parseStringToArray($headers, PHP_EOL, ':');
 
-        echo "<pre>";
-        print_r($this->_url);
-        echo PHP_EOL;
-        print_r($this->_headers);
-        echo PHP_EOL;
-        print_r($this->_response);
-        echo "</pre>";
+        if ($this->_debug) {
+            echo "<pre>";
+            print_r($this->_url);
+            echo PHP_EOL;
+            print_r($this->_headers);
+            echo PHP_EOL;
+            print_r($this->_response);
+            echo "</pre>";
+        }
+        
         curl_close($ch);
     }
 
+    /**
+     * @return string
+     */
     public function getResponse() {
         return $this->_response;
     }
 
+    /**
+     * @return array
+     */
     public function getHeaders() {
         return $this->_headers;
     }
 
+    /**
+     * @param boolean $debug 
+     */
+    public function setDebug($debug) {
+        $this->_debug = $debug;
+    }
 
 }
 
-class OAuth2_Exception extends Exception
-{
-    
-}
+class OAuth2_Exception extends Exception {}
