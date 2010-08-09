@@ -107,7 +107,8 @@ class OAuth2_Service
         $parameters = array(
             'type' => 'web_server',
             'client_id' => $this->_client->getClientKey(),
-            'redirect_uri' => $this->_client->getCallbackUrl()
+            'redirect_uri' => $this->_client->getCallbackUrl(),
+            'response_type' => 'code',
         );
         if ($this->_scope) {
             $parameters['scope'] = $this->_scope;
