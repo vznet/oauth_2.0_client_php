@@ -175,7 +175,7 @@ class OAuth2_Service
      *
      * @param OAuth2_HttpClient $http
      */
-    private function _parseAccessTokenResponse(OAuth2_HttpClient $http) {
+    private function _parseAccessTokenResponse(OAuth2_HttpClient $http) {      
         $headers = $http->getHeaders();
         $type = 'text';
         if (isset($headers['Content-Type']) && strpos($headers['Content-Type'], 'application/json') !== false) {
@@ -246,7 +246,7 @@ class OAuth2_Service
 
         $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $header);
         $http->execute();
-        
+
         return $http->getResponse();
     }
 }
