@@ -120,7 +120,7 @@ class OAuth2_Service
     }
 
     /**
-     * get access token of from service, has to be called after successfull authorization
+     * get access token of from service, has to be called after successful authorization
      *
      * @param string $code optional, if no code given method tries to get it out of $_GET
      */
@@ -242,7 +242,6 @@ class OAuth2_Service
 
         $parameters = null;
 
-        $header = array();
         $header = array('Authorization: OAuth ' . $token->getAccessToken());
 
         $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $header);
@@ -303,7 +302,6 @@ class OAuth2_Token
     public function getLifeTime() {
         return $this->_lifeTime;
     }
-
 }
 
 class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
@@ -545,7 +543,6 @@ class OAuth2_HttpClient
     public function setDebug($debug) {
         $this->_debug = $debug;
     }
-
 }
 
 class OAuth2_Exception extends Exception {}
