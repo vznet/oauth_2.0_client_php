@@ -44,7 +44,6 @@ $token = $dataStore->retrieveAccessToken();
 ?>
 <html>
     <head>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     </head>
     <body>
         Consumer Key: <input type="text" id="consumer-key" value="<?= $client->getClientKey() ?>" /><br />
@@ -53,16 +52,8 @@ $token = $dataStore->retrieveAccessToken();
         Refresh Token: <input type="text" id="refresh-token" value="<?= $token->getRefreshToken() ?>" /><br />
         LifeTime: <input type="text" id="lifetime" value="<?= $token->getLifeTime() ?>" /><br />
         <br />
-        <a href="javascript:;" id="authorize">authorize</a><br />
+        <a href="example.php?action=authorize" id="authorize">authorize</a><br />
         <br />
-        <a href="javascript:;" id="request-api">request API</a><br />
-        <script type="text/javascript">
-            $('#authorize').click(function() {
-                window.location.href = 'index.php?action=authorize';
-            });
-            $('#request-api').click(function() {
-                window.location.href = 'index.php?action=requestApi';
-            });
-        </script>
+        <a href="example.php?action=requestApi" id="request-api">request API</a><br />
     </body>
 </html>
