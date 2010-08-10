@@ -5,7 +5,7 @@ This PHP library helps you to implement an OAuth 2.0 client.
 
 It uses the draft 10 of the current OAuth 2.0 specification [1]
 
-Currently only the web_server flow is and the core response_type is supported.
+Currently only the web_server flow and the core response_type is supported.
 
 Example
 -------
