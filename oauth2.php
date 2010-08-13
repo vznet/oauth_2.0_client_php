@@ -141,6 +141,10 @@ class OAuth2_Service
             'code' => $code,
         );
 
+        if ($this->_scope) {
+            $parameters['scope'] = $this->_scope;
+        }
+        
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         $http->execute();
 
@@ -204,6 +208,15 @@ class OAuth2_Service
                 isset($response['refresh_token']) ? $response['refresh_token'] : null, 
                 isset($response['expires_in']) ? $response['expires_in'] : null);
 
+        unset($response['access_token']);
+        unset($response['refresh_token']);
+        unset($response['expires_in']);
+
+        // add additional parameters which may be returned depending on service and scope
+        foreach ($response as $key => $value) {
+            $token->{'set' . $key}($value);
+        }
+        
         $this->_dataStore->storeAccessToken($token);
     }
 
@@ -269,6 +282,10 @@ class OAuth2_Token
     private $_lifeTime;
 
     /**
+     * @var array
+     */
+    private $_additionalParams = array();
+    /**
      *
      * @param string $accessToken
      * @param string $refreshToken
@@ -279,6 +296,39 @@ class OAuth2_Token
         $this->_refreshToken = $refreshToken;
         if ($lifeTime) {
             $this->_lifeTime = ((int)$lifeTime) + time();
+        }
+    }
+
+    /**
+     * magic method for setting and getting additional parameters returned from
+     * service
+     *
+     * e.g. user_id parameter with scope openid
+     *
+     * @param string $name
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments) {
+        if (strlen($name) < 4) {
+            throw new OAuth2_Exception('undefined magic method called');
+        }
+        $method = substr($name, 0, 3);
+        $param  = substr($name, 3);
+        switch ($method) {
+            case 'get':
+                if (! isset($this->_additionalParams[$param])) {
+                    throw new OAuth2_Exception($param . ' was not returned by service');
+                }
+                return $this->_additionalParams[$param];
+            case 'set':
+                if (! isset($arguments[0])) {
+                    throw new OAuth2_Exception('magic setter has no argument');
+                }
+                $this->_additionalParams[$param] = $arguments[0];
+                break;
+            default:
+                throw new OAuth2_Exception('undefined magic method called');
         }
     }
 
