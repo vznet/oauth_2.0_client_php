@@ -38,6 +38,11 @@ class OAuth2_Service_Configuration
     private $_accessTokenEndpoint;
 
     /**
+     * @var string
+     */
+    private $_useOnlyAuthorizationHeader = true;
+
+    /**
      * @param string $authorizeEndpoint
      * @param string $accessTokenEndpoint
      */
@@ -58,6 +63,20 @@ class OAuth2_Service_Configuration
      */
     public function getAccessTokenEndpoint() {
         return $this->_accessTokenEndpoint;
+    }
+
+    /**
+     * @return string
+     */
+    public function setUseOnlyAuthorizationHeader($useOnlyAuthorizationHeader) {
+         $this->_useOnlyAuthorizationHeader = $useOnlyAuthorizationHeader;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUseOnlyAuthorizationHeader() {
+        return $this->_useOnlyAuthorizationHeader;
     }
 
 }
@@ -146,6 +165,7 @@ class OAuth2_Service
         }
         
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
+        $http->setDebug(true);
         $http->execute();
 
         $this->_parseAccessTokenResponse($http);
@@ -236,19 +256,27 @@ class OAuth2_Service
         if ($token->getLifeTime() && $token->getLifeTime() < time()) {
             $token = $this->refreshAccessToken($token);
         }
-
-        if ($method !== 'GET') {
-            if (is_array($postBody)) {
-                $postBody['oauth_token'] = $token->getAccessToken();
-                $parameters = http_build_query($postBody);
+        
+        if (!$this->_configuration->getUseOnlyAuthorizationHeader()){ 
+            /*
+            http://tools.ietf.org/html/draft-ietf-oauth-v2-10#section-5.1
+            Clients SHOULD only use the request URI or body when the
+            "Authorization" request header field is not available, and MUST NOT
+            use more than one method in each request.only one method should be used as per the Draft. 
+            Allow to override correct behavior for misimplemented servers
+            */
+            if ($method !== 'GET') {
+                if (is_array($postBody)) {
+                    $postBody['oauth_token'] = $token->getAccessToken();
+                    $parameters = http_build_query($postBody);
+                } else {
+                    $postBody .= '&oauth_token=' . urlencode($token->getAccessToken());
+                    $parameters = $postBody;
+                }
             } else {
-                $postBody .= '&oauth_token=' . urlencode($token->getAccessToken());
-                $parameters = $postBody;
+                $uriParameters['oauth_token'] = $token->getAccessToken();
             }
-        } else {
-            $uriParameters['oauth_token'] = $token->getAccessToken();
         }
-
         if (! empty($uriParameters)) {
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
