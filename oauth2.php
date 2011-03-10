@@ -165,7 +165,7 @@ class OAuth2_Service
         }
         
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
-        $http->setDebug(true);
+        //$http->setDebug(true);
         $http->execute();
 
         $this->_parseAccessTokenResponse($http);
