@@ -247,9 +247,10 @@ class OAuth2_Service
      * @param string $method default 'GET'
      * @param array $uriParameters optional
      * @param mixed $postBody optional, can be string or array
+     * @param array $additionalHeaders
      * @return string
      */
-    public function callApiEndpoint($endpoint, $method = 'GET', array $uriParameters = array(), $postBody = null) {
+    public function callApiEndpoint($endpoint, $method = 'GET', array $uriParameters = array(), $postBody = null, array $additionalHeaders = array()) {
         $token = $this->_dataStore->retrieveAccessToken();
 
         //check if token is invalid
@@ -283,9 +284,9 @@ class OAuth2_Service
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
 
-        $header = array('Authorization: OAuth ' . $token->getAccessToken());
+        $headers = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
 
-        $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $header);
+        $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $headers);
         $http->execute();
 
         return $http->getResponse();
