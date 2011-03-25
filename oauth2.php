@@ -192,15 +192,16 @@ class OAuth2_Service
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         $http->execute();
 
-        $this->_parseAccessTokenResponse($http);
+        $this->_parseAccessTokenResponse($http, $token->getRefreshToken());
     }
 
     /**
      * parse the response of an access token request and store it in dataStore
      *
      * @param OAuth2_HttpClient $http
+     * @param string $oldRefreshToken
      */
-    private function _parseAccessTokenResponse(OAuth2_HttpClient $http) {      
+    private function _parseAccessTokenResponse(OAuth2_HttpClient $http, $oldRefreshToken = null) {
         $headers = $http->getHeaders();
         $type = 'text';
         if (isset($headers['Content-Type']) && strpos($headers['Content-Type'], 'application/json') !== false) {
@@ -225,7 +226,7 @@ class OAuth2_Service
         }
 
         $token = new OAuth2_Token($response['access_token'], 
-                isset($response['refresh_token']) ? $response['refresh_token'] : null, 
+                isset($response['refresh_token']) ? $response['refresh_token'] : $oldRefreshToken,
                 isset($response['expires_in']) ? $response['expires_in'] : null);
 
         unset($response['access_token']);
