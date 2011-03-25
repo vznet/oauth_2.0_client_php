@@ -175,6 +175,7 @@ class OAuth2_Service
      * refresh access token
      *
      * @param OAuth2_Token $token
+     * @return OAuth2_Token new token object
      */
     public function refreshAccessToken(OAuth2_Token $token) {
         if (! $token->getRefreshToken()) {
@@ -192,7 +193,7 @@ class OAuth2_Service
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         $http->execute();
 
-        $this->_parseAccessTokenResponse($http, $token->getRefreshToken());
+        return $this->_parseAccessTokenResponse($http, $token->getRefreshToken());
     }
 
     /**
@@ -200,6 +201,7 @@ class OAuth2_Service
      *
      * @param OAuth2_HttpClient $http
      * @param string $oldRefreshToken
+     * @return OAuth2_Token
      */
     private function _parseAccessTokenResponse(OAuth2_HttpClient $http, $oldRefreshToken = null) {
         $headers = $http->getHeaders();
@@ -239,6 +241,8 @@ class OAuth2_Service
         }
         
         $this->_dataStore->storeAccessToken($token);
+
+        return $token;
     }
 
     /**
