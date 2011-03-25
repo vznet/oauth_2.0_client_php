@@ -256,7 +256,9 @@ class OAuth2_Service
         if ($token->getLifeTime() && $token->getLifeTime() < time()) {
             $token = $this->refreshAccessToken($token);
         }
-        
+
+        $parameters = null;
+
         if (!$this->_configuration->getUseOnlyAuthorizationHeader()){ 
             /*
             http://tools.ietf.org/html/draft-ietf-oauth-v2-10#section-5.1
@@ -280,8 +282,6 @@ class OAuth2_Service
         if (! empty($uriParameters)) {
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
-
-        $parameters = null;
 
         $header = array('Authorization: OAuth ' . $token->getAccessToken());
 
