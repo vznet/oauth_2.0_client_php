@@ -276,15 +276,22 @@ class OAuth2_Service
             if ($method !== 'GET') {
                 if (is_array($postBody)) {
                     $postBody['oauth_token'] = $token->getAccessToken();
-                    $parameters = http_build_query($postBody);
                 } else {
                     $postBody .= '&oauth_token=' . urlencode($token->getAccessToken());
-                    $parameters = $postBody;
                 }
             } else {
                 $uriParameters['oauth_token'] = $token->getAccessToken();
             }
         }
+
+        if ($method !== 'GET') {
+            if (is_array($postBody)) {
+                $parameters = http_build_query($postBody);
+            } else {
+                $parameters = $postBody;
+            }
+        }
+        
         if (! empty($uriParameters)) {
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
