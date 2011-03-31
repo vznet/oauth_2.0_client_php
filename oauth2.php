@@ -363,7 +363,7 @@ class OAuth2_Token
                 }
                 return $this->_additionalParams[$param];
             case 'set':
-                if (! isset($arguments[0])) {
+                if (! array_key_exists(0, $arguments)) {
                     throw new OAuth2_Exception('magic setter has no argument');
                 }
                 $this->_additionalParams[$param] = $arguments[0];
