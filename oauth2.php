@@ -94,7 +94,7 @@ class OAuth2_Service
     private $_configuration;
 
     /**
-     * @var OAuth2_DataStore_Abstract
+     * @var OAuth2_DataStore_Interface
      */
     private $_dataStore;
 
@@ -106,12 +106,12 @@ class OAuth2_Service
     /**
      * @param OAuth2_Client $client
      * @param OAuth2_Service_Configuration $configuration
-     * @param OAuth2_DataStore_Abstract $dataStore
+     * @param OAuth2_DataStore_Interface $dataStore
      * @param string $scope optional
      */
     public function  __construct(OAuth2_Client $client,
             OAuth2_Service_Configuration $configuration,
-            OAuth2_DataStore_Abstract $dataStore,
+            OAuth2_DataStore_Interface $dataStore,
             $scope = null) {
         $this->_client = $client;
         $this->_configuration = $configuration;
@@ -163,7 +163,7 @@ class OAuth2_Service
         if ($this->_scope) {
             $parameters['scope'] = $this->_scope;
         }
-        
+
         $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         //$http->setDebug(true);
         $http->execute();
@@ -227,7 +227,7 @@ class OAuth2_Service
             throw new OAuth2_Exception('no access_token found');
         }
 
-        $token = new OAuth2_Token($response['access_token'], 
+        $token = new OAuth2_Token($response['access_token'],
                 isset($response['refresh_token']) ? $response['refresh_token'] : $oldRefreshToken,
                 isset($response['expires_in']) ? $response['expires_in'] : null);
 
@@ -239,7 +239,7 @@ class OAuth2_Service
         foreach ($response as $key => $value) {
             $token->{'set' . $key}($value);
         }
-        
+
         $this->_dataStore->storeAccessToken($token);
 
         return $token;
@@ -265,12 +265,12 @@ class OAuth2_Service
 
         $parameters = null;
 
-        if (!$this->_configuration->getUseOnlyAuthorizationHeader()){ 
+        if (!$this->_configuration->getUseOnlyAuthorizationHeader()){
             /*
             http://tools.ietf.org/html/draft-ietf-oauth-v2-10#section-5.1
             Clients SHOULD only use the request URI or body when the
             "Authorization" request header field is not available, and MUST NOT
-            use more than one method in each request.only one method should be used as per the Draft. 
+            use more than one method in each request.only one method should be used as per the Draft.
             Allow to override correct behavior for misimplemented servers
             */
             if ($method !== 'GET') {
@@ -291,7 +291,7 @@ class OAuth2_Service
                 $parameters = $postBody;
             }
         }
-        
+
         if (! empty($uriParameters)) {
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
@@ -395,7 +395,7 @@ class OAuth2_Token
     }
 }
 
-class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
+class OAuth2_DataStore_Session implements OAuth2_DataStore_Interface
 {
     public function __construct() {
         session_start();
@@ -421,17 +421,17 @@ class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
     }
 }
 
-abstract class OAuth2_DataStore_Abstract
+interface OAuth2_DataStore_Interface
 {
     /**
      * @param OAuth2_Token $token
      */
-    abstract function storeAccessToken(OAuth2_Token $token);
+    function storeAccessToken(OAuth2_Token $token);
 
     /**
      * @return OAuth2_Token
      */
-    abstract function retrieveAccessToken();
+    function retrieveAccessToken();
 }
 
 class OAuth2_Client
@@ -610,7 +610,7 @@ class OAuth2_HttpClient
             print_r($this->_response);
             echo "</pre>";
         }
-        
+
         curl_close($ch);
     }
 
@@ -629,7 +629,7 @@ class OAuth2_HttpClient
     }
 
     /**
-     * @param boolean $debug 
+     * @param boolean $debug
      */
     public function setDebug($debug) {
         $this->_debug = $debug;
