@@ -94,7 +94,7 @@ class OAuth2_Service
     private $_configuration;
 
     /**
-     * @var OAuth2_DataStore_Abstract
+     * @var OAuth2_DataStore_Interface
      */
     private $_dataStore;
 
@@ -106,12 +106,12 @@ class OAuth2_Service
     /**
      * @param OAuth2_Client $client
      * @param OAuth2_Service_Configuration $configuration
-     * @param OAuth2_DataStore_Abstract $dataStore
+     * @param OAuth2_DataStore_Interface $dataStore
      * @param string $scope optional
      */
     public function  __construct(OAuth2_Client $client,
             OAuth2_Service_Configuration $configuration,
-            OAuth2_DataStore_Abstract $dataStore,
+            OAuth2_DataStore_Interface $dataStore,
             $scope = null) {
         $this->_client = $client;
         $this->_configuration = $configuration;
@@ -397,7 +397,7 @@ class OAuth2_Token
     }
 }
 
-class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
+class OAuth2_DataStore_Session implements OAuth2_DataStore_Interface
 {
     public function __construct() {
         session_start();
@@ -423,17 +423,17 @@ class OAuth2_DataStore_Session extends OAuth2_DataStore_Abstract
     }
 }
 
-abstract class OAuth2_DataStore_Abstract
+interface OAuth2_DataStore_Interface
 {
     /**
      * @param OAuth2_Token $token
      */
-    abstract function storeAccessToken(OAuth2_Token $token);
+    function storeAccessToken(OAuth2_Token $token);
 
     /**
      * @return OAuth2_Token
      */
-    abstract function retrieveAccessToken();
+    function retrieveAccessToken();
 }
 
 class OAuth2_Client
