@@ -298,7 +298,7 @@ class OAuth2_Service
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
 
-        $headers = array_merge(array('Authorization: Bearer ' . $token->getAccessToken()), $additionalHeaders);
+        $headers = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
 
         $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $headers);
         $http->execute();
