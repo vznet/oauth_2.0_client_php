@@ -27,6 +27,9 @@
 
 class OAuth2_Service_Configuration
 {
+    const AUTHORIZATION_METHOD_HEADER = 1;
+    const AUTHORIZATION_METHOD_ALTERNATIVE = 2;
+
     /**
      * @var string
      */
@@ -40,7 +43,7 @@ class OAuth2_Service_Configuration
     /**
      * @var string
      */
-    private $_useOnlyAuthorizationHeader = true;
+    private $_authorizationMethod = self::AUTHORIZATION_METHOD_HEADER;
 
     /**
      * @param string $authorizeEndpoint
@@ -68,15 +71,15 @@ class OAuth2_Service_Configuration
     /**
      * @return string
      */
-    public function setUseOnlyAuthorizationHeader($useOnlyAuthorizationHeader) {
-         $this->_useOnlyAuthorizationHeader = $useOnlyAuthorizationHeader;
+    public function setAuthorizationMethod($authorizationMethod) {
+         $this->_authorizationMethod = $authorizationMethod;
     }
 
     /**
      * @return string
      */
-    public function getUseOnlyAuthorizationHeader() {
-        return $this->_useOnlyAuthorizationHeader;
+    public function getAuthorizationMethod() {
+        return $this->_authorizationMethod;
     }
 
 }
@@ -267,23 +270,26 @@ class OAuth2_Service
 
         $parameters = null;
 
-        if (!$this->_configuration->getUseOnlyAuthorizationHeader()){
-            /*
-            http://tools.ietf.org/html/draft-ietf-oauth-v2-10#section-5.1
-            Clients SHOULD only use the request URI or body when the
-            "Authorization" request header field is not available, and MUST NOT
-            use more than one method in each request.only one method should be used as per the Draft.
-            Allow to override correct behavior for misimplemented servers
-            */
-            if ($method !== 'GET') {
-                if (is_array($postBody)) {
-                    $postBody['oauth_token'] = $token->getAccessToken();
+        $authorizationMethod = $this->_configuration->getAuthorizationMethod();
+
+        switch ($authorizationMethod) {
+            case OAuth2_Service_Configuration::AUTHORIZATION_METHOD_HEADER:
+                $additionalHeaders = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
+                break;
+            case OAuth2_Service_Configuration::AUTHORIZATION_METHOD_ALTERNATIVE:
+                if ($method !== 'GET') {
+                    if (is_array($postBody)) {
+                        $postBody['oauth_token'] = $token->getAccessToken();
+                    } else {
+                        $postBody .= '&oauth_token=' . urlencode($token->getAccessToken());
+                    }
                 } else {
-                    $postBody .= '&oauth_token=' . urlencode($token->getAccessToken());
+                    $uriParameters['oauth_token'] = $token->getAccessToken();
                 }
-            } else {
-                $uriParameters['oauth_token'] = $token->getAccessToken();
-            }
+                break;
+            default:
+                throw new OAuth2_Exception("Invalid authorization method specified");
+                break;
         }
 
         if ($method !== 'GET') {
@@ -298,9 +304,8 @@ class OAuth2_Service
             $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . http_build_query($uriParameters);
         }
 
-        $headers = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
 
-        $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $headers);
+        $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $additionalHeaders);
         $http->execute();
 
         return $http->getResponse();
