@@ -21,6 +21,7 @@
  * THE SOFTWARE.
  *
  * @author    Bastian Hofmann <bhfomann@vz.net>
+ * @author    Vyacheslav Slinko <vyacheslav.slinko@gmail.com>
  * @copyright 2010 VZnet Netzwerke Ltd.
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
