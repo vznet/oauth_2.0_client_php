@@ -1,6 +1,8 @@
 <?php
 
-require_once 'oauth2.php';
+spl_autoload_register(function ($class) {
+    require str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
+});
 
 // configuration of client credentials
 $client = new OAuth2_Client(
