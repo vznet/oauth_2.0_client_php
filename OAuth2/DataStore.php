@@ -25,15 +25,17 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-interface OAuth2_DataStore_Interface
+namespace OAuth2;
+
+interface DataStore
 {
     /**
-     * @param OAuth2_Token $token
+     * @param \OAuth2\Token $token
      */
-    function storeAccessToken(OAuth2_Token $token);
+    function storeAccessToken(Token $token);
 
     /**
-     * @return OAuth2_Token
+     * @return \OAuth2\Token
      */
     function retrieveAccessToken();
 }

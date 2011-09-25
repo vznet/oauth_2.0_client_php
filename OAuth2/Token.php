@@ -25,7 +25,9 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_Token
+namespace OAuth2;
+
+class Token
 {
     /**
      * @var string
@@ -72,24 +74,24 @@ class OAuth2_Token
      */
     public function __call($name, $arguments) {
         if (strlen($name) < 4) {
-            throw new OAuth2_Exception('undefined magic method called');
+            throw new Exception('undefined magic method called');
         }
         $method = substr($name, 0, 3);
         $param  = substr($name, 3);
         switch ($method) {
             case 'get':
                 if (! isset($this->_additionalParams[$param])) {
-                    throw new OAuth2_Exception($param . ' was not returned by service');
+                    throw new Exception($param . ' was not returned by service');
                 }
                 return $this->_additionalParams[$param];
             case 'set':
                 if (! array_key_exists(0, $arguments)) {
-                    throw new OAuth2_Exception('magic setter has no argument');
+                    throw new Exception('magic setter has no argument');
                 }
                 $this->_additionalParams[$param] = $arguments[0];
                 break;
             default:
-                throw new OAuth2_Exception('undefined magic method called');
+                throw new Exception('undefined magic method called');
         }
     }
 

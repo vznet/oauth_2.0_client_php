@@ -25,4 +25,6 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_Exception extends Exception {}
+namespace OAuth2;
+
+class Exception extends \Exception {}

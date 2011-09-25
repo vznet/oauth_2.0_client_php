@@ -25,7 +25,9 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_HttpClient
+namespace OAuth2;
+
+class HttpClient
 {
     /**
      * @var string
@@ -139,7 +141,7 @@ class OAuth2_HttpClient
         }
         $headers = rtrim(substr($fullResponse, 0, $this->_info['header_size']));
 
-        $this->_headers = OAuth2_HttpClient::parseStringToArray($headers, PHP_EOL, ':');
+        $this->_headers = static::parseStringToArray($headers, PHP_EOL, ':');
 
         if ($this->_debug) {
             echo "<pre>";

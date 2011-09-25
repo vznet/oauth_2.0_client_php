@@ -25,7 +25,12 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_DataStore_Session implements OAuth2_DataStore_Interface
+namespace OAuth2\DataStore;
+
+use OAuth2\DataStore;
+use OAuth2\Token;
+
+class Session implements DataStore
 {
     public function __construct() {
         session_start();
@@ -33,16 +38,16 @@ class OAuth2_DataStore_Session implements OAuth2_DataStore_Interface
 
     /**
      *
-     * @return OAuth2_Token
+     * @return \OAuth2\Token
      */
     public function retrieveAccessToken() {
-        return isset($_SESSION['oauth2_token']) ? $_SESSION['oauth2_token'] : new OAuth2_Token();
+        return isset($_SESSION['oauth2_token']) ? $_SESSION['oauth2_token'] : new Token();
     }
 
     /**
-     * @param OAuth2_Token $token
+     * @param \OAuth2\Token $token
      */
-    public function storeAccessToken(OAuth2_Token $token) {
+    public function storeAccessToken(Token $token) {
         $_SESSION['oauth2_token'] = $token;
     }
 

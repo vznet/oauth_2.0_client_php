@@ -25,20 +25,22 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_Service
+namespace OAuth2;
+
+class Service
 {
     /**
-     * @var OAuth2_Client
+     * @var \OAuth2\Client
      */
     private $_client;
 
     /**
-     * @var OAuth2_Service_Configuration
+     * @var \OAuth2\Service\Configuration
      */
     private $_configuration;
 
     /**
-     * @var OAuth2_DataStore_Interface
+     * @var \OAuth2\DataStore
      */
     private $_dataStore;
 
@@ -48,14 +50,14 @@ class OAuth2_Service
     private $_scope;
 
     /**
-     * @param OAuth2_Client $client
-     * @param OAuth2_Service_Configuration $configuration
-     * @param OAuth2_DataStore_Interface $dataStore
+     * @param \OAuth2\Client $client
+     * @param \OAuth2\Service\Configuration $configuration
+     * @param \OAuth2\DataStore $dataStore
      * @param string $scope optional
      */
-    public function  __construct(OAuth2_Client $client,
-            OAuth2_Service_Configuration $configuration,
-            OAuth2_DataStore_Interface $dataStore,
+    public function  __construct(Client $client,
+            Service\Configuration $configuration,
+            DataStore $dataStore,
             $scope = null) {
         $this->_client = $client;
         $this->_configuration = $configuration;
@@ -92,7 +94,7 @@ class OAuth2_Service
     public function getAccessToken($code = null) {
         if (! $code) {
             if (! isset($_GET['code'])) {
-                throw new OAuth2_Exception('could not retrieve code out of callback request and no code given');
+                throw new Exception('could not retrieve code out of callback request and no code given');
             }
             $code = $_GET['code'];
         }
@@ -110,7 +112,7 @@ class OAuth2_Service
             $parameters['scope'] = $this->_scope;
         }
 
-        $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
+        $http = new HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         //$http->setDebug(true);
         $http->execute();
 
@@ -120,12 +122,12 @@ class OAuth2_Service
     /**
      * refresh access token
      *
-     * @param OAuth2_Token $token
-     * @return OAuth2_Token new token object
+     * @param \OAuth2\Token $token
+     * @return \OAuth2\Token new token object
      */
-    public function refreshAccessToken(OAuth2_Token $token) {
+    public function refreshAccessToken(Token $token) {
         if (! $token->getRefreshToken()) {
-            throw new OAuth2_Exception('could not refresh access token, no refresh token available');
+            throw new Exception('could not refresh access token, no refresh token available');
         }
 
         $parameters = array(
@@ -136,7 +138,7 @@ class OAuth2_Service
             'refresh_token' => $token->getRefreshToken(),
         );
 
-        $http = new OAuth2_HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
+        $http = new HttpClient($this->_configuration->getAccessTokenEndpoint(), 'POST', http_build_query($parameters));
         $http->execute();
 
         return $this->_parseAccessTokenResponse($http, $token->getRefreshToken());
@@ -145,11 +147,11 @@ class OAuth2_Service
     /**
      * parse the response of an access token request and store it in dataStore
      *
-     * @param OAuth2_HttpClient $http
+     * @param \OAuth2\HttpClient $http
      * @param string $oldRefreshToken
-     * @return OAuth2_Token
+     * @return \OAuth2\Token
      */
-    private function _parseAccessTokenResponse(OAuth2_HttpClient $http, $oldRefreshToken = null) {
+    private function _parseAccessTokenResponse(HttpClient $http, $oldRefreshToken = null) {
         $headers = $http->getHeaders();
         $type = 'text';
         if (isset($headers['Content-Type']) && strpos($headers['Content-Type'], 'application/json') !== false) {
@@ -162,18 +164,18 @@ class OAuth2_Service
                 break;
             case 'text':
             default:
-                $response = OAuth2_HttpClient::parseStringToArray($http->getResponse(), '&', '=');
+                $response = HttpClient::parseStringToArray($http->getResponse(), '&', '=');
                 break;
         }
 
         if (isset($response['error'])) {
-            throw new OAuth2_Exception('got error while requesting access token: ' . $response['error']);
+            throw new Exception('got error while requesting access token: ' . $response['error']);
         }
         if (! isset($response['access_token'])) {
-            throw new OAuth2_Exception('no access_token found');
+            throw new Exception('no access_token found');
         }
 
-        $token = new OAuth2_Token($response['access_token'],
+        $token = new Token($response['access_token'],
                 isset($response['refresh_token']) ? $response['refresh_token'] : $oldRefreshToken,
                 isset($response['expires_in']) ? $response['expires_in'] : null);
 
@@ -214,10 +216,10 @@ class OAuth2_Service
         $authorizationMethod = $this->_configuration->getAuthorizationMethod();
 
         switch ($authorizationMethod) {
-            case OAuth2_Service_Configuration::AUTHORIZATION_METHOD_HEADER:
+            case Service\Configuration::AUTHORIZATION_METHOD_HEADER:
                 $additionalHeaders = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
                 break;
-            case OAuth2_Service_Configuration::AUTHORIZATION_METHOD_ALTERNATIVE:
+            case Service\Configuration::AUTHORIZATION_METHOD_ALTERNATIVE:
                 if ($method !== 'GET') {
                     if (is_array($postBody)) {
                         $postBody['oauth_token'] = $token->getAccessToken();
@@ -229,7 +231,7 @@ class OAuth2_Service
                 }
                 break;
             default:
-                throw new OAuth2_Exception("Invalid authorization method specified");
+                throw new Exception("Invalid authorization method specified");
                 break;
         }
 
@@ -246,7 +248,7 @@ class OAuth2_Service
         }
 
 
-        $http = new OAuth2_HttpClient($endpoint, $method, $parameters, $additionalHeaders);
+        $http = new HttpClient($endpoint, $method, $parameters, $additionalHeaders);
         $http->execute();
 
         return $http->getResponse();

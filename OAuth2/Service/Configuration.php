@@ -25,7 +25,9 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  */
 
-class OAuth2_Service_Configuration
+namespace OAuth2\Service;
+
+class Configuration
 {
     const AUTHORIZATION_METHOD_HEADER = 1;
     const AUTHORIZATION_METHOD_ALTERNATIVE = 2;
