@@ -1,25 +1,27 @@
 <?php
 
-require_once 'oauth2.php';
+spl_autoload_register(function ($class) {
+    require str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
+});
 
 // configuration of client credentials
-$client = new OAuth2_Client(
+$client = new OAuth2\Client(
         'CLIENT_ID',
         'CLIENT_SECRET',
         'CALLBACK_URL');
 
 // configuration of service
-$configuration = new OAuth2_Service_Configuration(
+$configuration = new OAuth2\Service\Configuration(
         'AUTHORIZE_ENDPOINT',
         'ACCESS_TOKEN_ENDPOINT');
 
-// storage class for access token, just extend OAuth2_DataStore_Abstract for
+// storage class for access token, just implement OAuth2\DataStore interface for
 // your own implementation
-$dataStore = new OAuth2_DataStore_Session();
+$dataStore = new OAuth2\DataStore\Session();
 
 $scope = null;
 
-$service = new OAuth2_Service($client, $configuration, $dataStore, $scope);
+$service = new OAuth2\Service($client, $configuration, $dataStore, $scope);
 
 if (isset($_GET['action'])) {
     switch ($_GET['action']) {
