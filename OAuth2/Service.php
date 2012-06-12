@@ -69,13 +69,14 @@ class Service
     /**
      * redirect to authorize endpoint of service
      */
-    public function authorize() {
-        $parameters = array(
+    public function authorize(array $userParameters = array()) {
+       $parameters = array_merge($userParameters, array(
             'type' => 'web_server',
             'client_id' => $this->_client->getClientKey(),
             'redirect_uri' => $this->_client->getCallbackUrl(),
             'response_type' => 'code',
-        );
+        ));
+
         if ($this->_scope) {
             $parameters['scope'] = $this->_scope;
         }
