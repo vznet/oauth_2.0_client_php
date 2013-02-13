@@ -128,6 +128,10 @@ class HttpClient
 
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        if (substr($this->_url, 0, 5) == 'https') {
+            //Disable ssl check, required for https urls
+            curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+        }
 
         if (! empty($this->_requestHeader)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $this->_requestHeader);
