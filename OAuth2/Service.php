@@ -219,7 +219,7 @@ class Service
 
         switch ($authorizationMethod) {
             case Service\Configuration::AUTHORIZATION_METHOD_HEADER:
-                $additionalHeaders = array_merge(array('Authorization: OAuth ' . $token->getAccessToken()), $additionalHeaders);
+                $additionalHeaders = array_merge(array('Authorization: Bearer ' . $token->getAccessToken()), $additionalHeaders);
                 break;
             case Service\Configuration::AUTHORIZATION_METHOD_ALTERNATIVE:
                 if ($method !== 'GET') {
