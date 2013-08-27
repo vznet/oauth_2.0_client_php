@@ -7,6 +7,10 @@ It uses the draft 10 of the current OAuth 2.0 specification [1]
 
 Currently only the web_server flow and the core response_type is supported.
 
+**THIS LIBRARY WILL NOT BE DEVELOPED ANY FURTHER**
+
+If you want to fork, go ahead. No pull-requests will be merged though.
+
 Example
 -------
 
